@@ -1,7 +1,3 @@
-.formAjout{
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-
-
+.content{
+    min-height: 100vh;
 }

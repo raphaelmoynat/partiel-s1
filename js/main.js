@@ -22,36 +22,9 @@ function renderContent(pageContent){
     if (token!=null){
         navbar.innerHTML += `<div class="container-fluid">
         <a class="navbar-brand" href="#">Page de ${userName}</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarScroll" aria-controls="navbarScroll" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarScroll">
-            <ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll" style="--bs-scroll-height: 100px;">
-                <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="#">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Link</a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Link
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#">Action</a></li>
-                        <li><a class="dropdown-item" href="#">Another action</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#">Something else here</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link disabled" aria-disabled="true">Link</a>
-                </li>
-            </ul>
-            <form class="d-flex" role="search">
-                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-success" type="submit">Search</button>
-            </form>
+        <div>
+            <button class="btn btn-danger suppr" type="submit">Tout Supprimer</button>
+            <button class="btn btn-success refresh" type="submit">Rafraichir</button>
         </div>
     </div>`
 
@@ -222,7 +195,7 @@ function generateProduit(produit){
     }
 
     let templateProduit = `
-        <div class="d-flex justify-content-center mt-5">
+        <div class="d-flex justify-content-center my-5">
         <div class="card" style="width: 18rem;">
             <img src="${produit.picture}" class="card-img-top" alt="...">
             <div class="card-body">
@@ -231,7 +204,8 @@ function generateProduit(produit){
                 <p class="card-text">statut : ${statut}</p>
                 <button class="btn btn-primary statut" id="${produit.id}" >Changer statut</button>
                 <button class="btn btn-primary delete" id="${produit.id}" >Supprimer</button>
-                
+                <button class="btn btn-primary addImage" id="${produit.id}" >Ajouter Image</button>
+            
             </div>
         </div>
         </div>
@@ -250,6 +224,9 @@ function renderListeCourses(produits){
     createFormProduit()
     switchButton()
     deleteButton()
+    refreshButton()
+    deleteAllBtn()
+    addImageBtn()
 
 }
 
@@ -336,7 +313,7 @@ function createFormProduit(){
     let btnPost =""
 
     let formMessage = `
-                            <div class="row fx-down formAjout">
+                            <div class="row">
                                 <input type="text mb-2" placeholder="nom" class=" border border-success fs-5" id="nameProduit">
                                 <input type="text mb-2" placeholder="description" class=" border border-success fs-5" id="descriptionProduit">
                                 <button type="button" class="btn btn-success fs-5" id="ajouterProduit">Ajouter</button>
@@ -346,10 +323,133 @@ function createFormProduit(){
 
     btnPost= document.querySelector('#ajouterProduit')
     btnPost.addEventListener('click', ()=>{
-
+        addProduit()
 
 
     })
+}
+
+async function addProduit(){
+    const name = document.querySelector('#nameProduit')
+    const description = document.querySelector('#descriptionProduit')
+
+
+    let corpsMessage = {
+        name : name.value,
+        description : description.value
+    }
+
+    const messageParams = {
+        headers : {"Content-type":"application/json",
+            "Authorization":`Bearer ${token}`},
+        method : "POST",
+        body :  JSON.stringify(corpsMessage)
+    }
+
+    return await fetch(`${baseUrl}mylist/new`, messageParams)
+        .then(response => response.json())
+        .then(data=>{
+            console.log(data)
+            run()
+        })
+
+}
+
+function refreshButton() {
+    const refreshButton = document.querySelectorAll('.refresh')
+    refreshButton.forEach((button) => {
+        button.addEventListener('click', () => {
+            console.log("coucou")
+            run()
+        })
+    })
+}
+
+function deleteAllBtn(){
+    const deleteAllButton = document.querySelectorAll('.suppr')
+    deleteAllButton.forEach((button) => {
+        button.addEventListener('click', () => {
+            console.log("coucou")
+            fetchDeleteAll()
+        })
+    })
+}
+
+async function fetchDeleteAll(){
+    const params = {
+        headers : {"Content-type":"application/json",
+            "Authorization":`Bearer ${token}`},
+        method : "DELETE"
+    }
+
+
+    return await fetch(`${baseUrl}mylist/clear`, params)
+        .then(response=>response.json())
+        .then(data=>{
+            console.log(data)
+            console.log('supprimer tout')
+            run()
+        })
+}
+
+function addImageBtn(){
+    const addImageButton = document.querySelectorAll('.addImage')
+    addImageButton.forEach((button) => {
+        button.addEventListener('click', () => {
+            const idProduit = button.id
+            addImageForm(idProduit)
+        })
+    })
+
+}
+
+function addImageForm(idProduit){
+    let addImageTemplate = `
+ 
+              <div class="mb-3">
+                <label  class="form-label">Ajouter image</label>
+                <input class="form-control" type="file" id="picture">
+              </div>
+              <button type="submit" class="btn btn-primary submitImage">Submit</button>
+
+    `
+
+    renderContent(addImageTemplate)
+    const imageInput = document.querySelector('#picture')
+    imageInput.addEventListener('change', () => {
+        // Mettez à jour l'aperçu de l'image si nécessaire
+        // Vous pouvez ajouter du code pour afficher l'aperçu de l'image ici si nécessaire
+    })
+
+    const submitImage = document.querySelector('.submitImage')
+    submitImage.addEventListener('click', ()=>{
+
+        const imageFile = imageInput.files[0]
+        console.log(imageFile)
+        fetchAddImage(idProduit, imageFile)
+    })
+}
+
+async function fetchAddImage(idProduit, imageFile){
+    const formData = new FormData();
+    formData.append('itempic', imageFile);
+
+
+    const params = {
+        headers : {"Authorization":`Bearer ${token}`,
+            },
+        method : "POST",
+        body: formData,
+    }
+
+    return await fetch(`${baseUrl}mylist/addpicturetoitem/${idProduit}`, params)
+        .then(response=>response.json())
+        .then(data=>{
+            console.log(data)
+            console.log('supprimer tout')
+            run()
+        })
+
 }
 
 
