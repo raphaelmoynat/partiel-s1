@@ -1,7 +1,9 @@
 let baseUrl = "https://partiel-b1dev.imatrythis.com/api/"
-let token = ""
+let token = null
 let content = document.querySelector('.content')
+let navbar = document.querySelector('.navbar')
 let userName = ""
+
 
 registerForm() //retourne le formulaire d'inscription
 function run(){
@@ -10,11 +12,51 @@ function run(){
     }
     else{
         console.log("réussi")
+        fetchListeCourses()
+
     }
 }
 function renderContent(pageContent){
+    navbar.innerHTML=""
     content.innerHTML=""
-    content.innerHTML = pageContent
+    if (token!=null){
+        navbar.innerHTML += `<div class="container-fluid">
+        <a class="navbar-brand" href="#">Page de ${userName}</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarScroll" aria-controls="navbarScroll" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarScroll">
+            <ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll" style="--bs-scroll-height: 100px;">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Link</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Link
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">Action</a></li>
+                        <li><a class="dropdown-item" href="#">Another action</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#">Something else here</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" aria-disabled="true">Link</a>
+                </li>
+            </ul>
+            <form class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+        </div>
+    </div>`
+
+    }
+    content.innerHTML += pageContent
 } //renvoie le contenu de la page
 function registerForm(){
 
@@ -123,3 +165,137 @@ async function fetchLogin(){
             }
         })
 }
+
+function renderProfile(profil) {
+    let buttonWatchList = ""
+
+    let templateProfile = `
+        <div class="d-flex justify-content-center mt-5">
+        <div class="card" style="width: 18rem;">
+            <img src="${profil.avatar}" class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">${profil.username}</h5>
+                <p class="card-text">id : ${profil.id}</p>
+                <button class="btn btn-primary watch" >Voir ma liste</button>
+            </div>
+        </div>
+        </div>
+    
+    `
+    renderContent(templateProfile)
+
+    buttonWatchList = document.querySelector('.watch')
+    buttonWatchList.addEventListener('click', ()=>{
+        fetchListeCourses()
+    })
+
+
+
+}
+
+async function fetchProfil(){
+    const params = {
+        headers : {"Content-type":"application/json",
+            "Authorization":`Bearer ${token}`},
+        method : "GET"
+    }
+
+
+    return await fetch(`${baseUrl}whoami`, params)
+        .then(response=>response.json())
+        .then(data=>{
+            return data
+            userName = data.username
+        })
+
+}
+
+function generateProduit(produit){
+
+
+    let statut = ""
+    if (produit.status == false){
+        statut = "en attente"
+    }
+    else{
+        statut = "acheté"
+    }
+
+    let templateProduit = `
+        <div class="d-flex justify-content-center mt-5">
+        <div class="card" style="width: 18rem;">
+            <img src="${produit.picture}" class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">${produit.name}</h5>
+                <p class="card-text">${produit.description}</p>
+                <p class="card-text">statut : ${statut}</p>
+                <button class="btn btn-primary statut" id="${produit.id}" >Changer statut</button>
+                
+            </div>
+        </div>
+        </div>
+    
+    `
+    return templateProduit
+
+}
+
+function renderListeCourses(produits){
+    let contentList = ""
+    produits.forEach(produit=>{
+        contentList += generateProduit(produit)
+    })
+    renderContent(contentList)
+    switchButton()
+
+}
+
+async function fetchListeCourses(){
+    const params = {
+        headers : {"Content-type":"application/json",
+            "Authorization":`Bearer ${token}`},
+        method : "GET"
+    }
+
+
+    return await fetch(`${baseUrl}mylist`, params)
+        .then(response=>response.json())
+        .then(data=>{
+            renderListeCourses(data)
+
+
+        })
+
+}
+
+function switchButton() {
+    const switchButtons = document.querySelectorAll('.statut')
+    switchButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            console.log("coucou")
+            const idProduit = button.id
+            switchStatus(idProduit)
+
+        })
+    })
+}
+
+async function switchStatus(idProduit){
+    const params = {
+        headers : {"Content-type":"application/json",
+            "Authorization":`Bearer ${token}`},
+        method : "PATCH"
+    }
+
+
+    return await fetch(`${baseUrl}mylist/switchstatus/${idProduit}`, params)
+        .then(response=>response.json())
+        .then(data=>{
+            console.log(data)
+            console.log('réussi')
+           run()
+        })
+
+}
+
+
