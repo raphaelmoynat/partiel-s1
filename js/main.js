@@ -230,6 +230,7 @@ function generateProduit(produit){
                 <p class="card-text">${produit.description}</p>
                 <p class="card-text">statut : ${statut}</p>
                 <button class="btn btn-primary statut" id="${produit.id}" >Changer statut</button>
+                <button class="btn btn-primary delete" id="${produit.id}" >Supprimer</button>
                 
             </div>
         </div>
@@ -246,7 +247,9 @@ function renderListeCourses(produits){
         contentList += generateProduit(produit)
     })
     renderContent(contentList)
+    createFormProduit()
     switchButton()
+    deleteButton()
 
 }
 
@@ -296,6 +299,57 @@ async function switchStatus(idProduit){
            run()
         })
 
+}
+
+function deleteButton() {
+    const deleteButtons = document.querySelectorAll('.delete')
+    deleteButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            console.log("coucou")
+            const idProduit = button.id
+            fetchDelete(idProduit)
+
+        })
+    })
+}
+
+
+async function fetchDelete(idProduit){
+    const params = {
+        headers : {"Content-type":"application/json",
+            "Authorization":`Bearer ${token}`},
+        method : "DELETE"
+    }
+
+
+    return await fetch(`${baseUrl}mylist/delete/${idProduit}`, params)
+        .then(response=>response.json())
+        .then(data=>{
+            console.log(data)
+            console.log('supprimer')
+            run()
+        })
+
+}
+
+function createFormProduit(){
+    let btnPost =""
+
+    let formMessage = `
+                            <div class="row fx-down formAjout">
+                                <input type="text mb-2" placeholder="nom" class=" border border-success fs-5" id="nameProduit">
+                                <input type="text mb-2" placeholder="description" class=" border border-success fs-5" id="descriptionProduit">
+                                <button type="button" class="btn btn-success fs-5" id="ajouterProduit">Ajouter</button>
+                            
+                            </div>`
+    content.innerHTML+=formMessage
+
+    btnPost= document.querySelector('#ajouterProduit')
+    btnPost.addEventListener('click', ()=>{
+
+
+
+    })
 }
 
 
