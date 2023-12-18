@@ -1,12 +1,12 @@
 let baseUrl = "https://partiel-b1dev.imatrythis.com/api/"
 let token = null
-let content = document.querySelector('.content')
+let content = document.querySelector('.content') //contenu de la page
 let navbar = document.querySelector('.navbar')
 let userName = ""
 
 
 registerForm() //retourne le formulaire d'inscription
-function run(){
+function run(){ //rafraichit le contenu de la page
     if (token==null){
         return loginForm()
     }
@@ -16,12 +16,12 @@ function run(){
 
     }
 }
-function renderContent(pageContent){
+function renderContent(pageContent){ //renvoie le contenu correspondant
     navbar.innerHTML=""
     content.innerHTML=""
     if (token!=null){
         navbar.innerHTML += `<div class="container-fluid">
-        <a class="navbar-brand" href="#">Page de ${userName}</a>
+        <a class="btn navbar-brand showProfile" href="#">Page de ${userName}</a>
         <div>
             <button class="btn btn-danger suppr" type="submit">Tout Supprimer</button>
             <button class="btn btn-success refresh" type="submit">Rafraichir</button>
@@ -58,7 +58,7 @@ function registerForm(){
         fetchRegister()
         console.log('coucou')
     })
-}
+} //renvoie le formulaire d'insciption
 async function fetchRegister(){
 
     let corpsRegister = {
@@ -111,7 +111,7 @@ function loginForm(){
         fetchLogin()
         console.log('coucou')
     })
-}
+} //renvoie le formulaire d'insciption
 async function fetchLogin(){
 
     let corpsLogin = {
@@ -139,11 +139,11 @@ async function fetchLogin(){
         })
 }
 
-function renderProfile(profil) {
+function renderProfile(profil) { //renvoie le profil utilisateur
     let buttonWatchList = ""
 
     let templateProfile = `
-        <div class="d-flex justify-content-center mt-5">
+        <div class="d-flex justify-content-center my-5">
         <div class="card" style="width: 18rem;">
             <img src="${profil.avatar}" class="card-img-top" alt="...">
             <div class="card-body">
@@ -153,9 +153,17 @@ function renderProfile(profil) {
             </div>
         </div>
         </div>
+        
+         <div class="mb-3">
+                <label  class="form-label">Ajouter avatar</label>
+                <input class="form-control" type="file" id="avatar">
+         </div>
+         <button type="submit" class="btn btn-primary submitAvatar">Submit</button>
     
     `
     renderContent(templateProfile)
+
+    addAvatarBtn()
 
     buttonWatchList = document.querySelector('.watch')
     buttonWatchList.addEventListener('click', ()=>{
@@ -177,13 +185,19 @@ async function fetchProfil(){
     return await fetch(`${baseUrl}whoami`, params)
         .then(response=>response.json())
         .then(data=>{
-            return data
-            userName = data.username
+            renderProfile(data)
         })
 
 }
 
-function generateProduit(produit){
+function buttonRenderProfile(){
+    const btnShowProfile= document.querySelector('.showProfile')
+    btnShowProfile.addEventListener('click', ()=>{
+        fetchProfil()
+    })
+}
+
+function generateProduit(produit){ //renvoie une fiche de produit
 
 
     let statut = ""
@@ -195,20 +209,24 @@ function generateProduit(produit){
     }
 
     let templateProduit = `
-        <div class="d-flex justify-content-center my-5">
-        <div class="card" style="width: 18rem;">
-            <img src="${produit.picture}" class="card-img-top" alt="...">
-            <div class="card-body">
-                <h5 class="card-title">${produit.name}</h5>
-                <p class="card-text">${produit.description}</p>
-                <p class="card-text">statut : ${statut}</p>
-                <button class="btn btn-primary statut" id="${produit.id}" >Changer statut</button>
-                <button class="btn btn-primary delete" id="${produit.id}" >Supprimer</button>
-                <button class="btn btn-primary addImage" id="${produit.id}" >Ajouter Image</button>
-            
-            </div>
-        </div>
-        </div>
+        
+                <div class='col-md-4 d-flex justify-content-center align-items-center'>
+                <div class="card mb-3" style="width: 18rem;">
+                    <img src="${produit.picture}" class="card-img-top" alt="...">
+                    <div class="card-body">
+                        <h5 class="card-title">${produit.name}</h5>
+                        <p class="card-text">${produit.description}</p>
+                        <p class="card-text">statut : ${statut}</p>
+                        <div class="d-flex flex-column justify-content-center">
+                            <button class="btn btn-primary  statut m-1" id="${produit.id}" >Changer statut</button>
+                            <button class="btn btn-danger delete m-1" id="${produit.id}" >Supprimer</button>
+                            <button class="btn btn-secondary addImage m-1" id="${produit.id}" >Ajouter Image</button>
+                            <button class="btn btn-warning modify m-1" id="${produit.id}" >Modifier</button>
+                        </div>                   
+                    </div>
+                </div>
+                </div>
+             
     
     `
     return templateProduit
@@ -216,10 +234,11 @@ function generateProduit(produit){
 }
 
 function renderListeCourses(produits){
-    let contentList = ""
+    let contentList = `<div class="row mt-3">`
     produits.forEach(produit=>{
         contentList += generateProduit(produit)
     })
+    contentList += `</div>`
     renderContent(contentList)
     createFormProduit()
     switchButton()
@@ -227,8 +246,10 @@ function renderListeCourses(produits){
     refreshButton()
     deleteAllBtn()
     addImageBtn()
+    buttonRenderProfile()
+    modifyBtn()
 
-}
+}//renvoie la liste de toutes les courses
 
 async function fetchListeCourses(){
     const params = {
@@ -236,7 +257,6 @@ async function fetchListeCourses(){
             "Authorization":`Bearer ${token}`},
         method : "GET"
     }
-
 
     return await fetch(`${baseUrl}mylist`, params)
         .then(response=>response.json())
@@ -254,13 +274,13 @@ function switchButton() {
         button.addEventListener('click', () => {
             console.log("coucou")
             const idProduit = button.id
-            switchStatus(idProduit)
+            fetchSwitchStatus(idProduit)
 
         })
     })
 }
 
-async function switchStatus(idProduit){
+async function fetchSwitchStatus(idProduit){
     const params = {
         headers : {"Content-type":"application/json",
             "Authorization":`Bearer ${token}`},
@@ -323,13 +343,13 @@ function createFormProduit(){
 
     btnPost= document.querySelector('#ajouterProduit')
     btnPost.addEventListener('click', ()=>{
-        addProduit()
+        fetchAddProduit()
 
 
     })
-}
+} //formulaire pour ajouter un produit
 
-async function addProduit(){
+async function fetchAddProduit(){
     const name = document.querySelector('#nameProduit')
     const description = document.querySelector('#descriptionProduit')
 
@@ -416,10 +436,7 @@ function addImageForm(idProduit){
 
     renderContent(addImageTemplate)
     const imageInput = document.querySelector('#picture')
-    imageInput.addEventListener('change', () => {
-        // Mettez à jour l'aperçu de l'image si nécessaire
-        // Vous pouvez ajouter du code pour afficher l'aperçu de l'image ici si nécessaire
-    })
+
 
     const submitImage = document.querySelector('.submitImage')
     submitImage.addEventListener('click', ()=>{
@@ -428,7 +445,7 @@ function addImageForm(idProduit){
         console.log(imageFile)
         fetchAddImage(idProduit, imageFile)
     })
-}
+} //renvoie le formulaire pour ajouter une image au produit
 
 async function fetchAddImage(idProduit, imageFile){
     const formData = new FormData();
@@ -447,6 +464,117 @@ async function fetchAddImage(idProduit, imageFile){
         .then(data=>{
             console.log(data)
             console.log('supprimer tout')
+            run()
+        })
+
+}
+
+function addAvatarBtn(){
+    const avatarInput = document.querySelector('#avatar')
+
+
+    const submitAvatar = document.querySelector('.submitAvatar')
+    submitAvatar.addEventListener('click', ()=>{
+
+        const avatarFile = avatarInput.files[0]
+
+        fetchAddAvatar(avatarFile)
+    })
+
+}
+
+
+
+async function fetchAddAvatar(avatarFile){
+    const formData = new FormData();
+    formData.append('profilepic', avatarFile);
+
+
+    const params = {
+        headers : {"Authorization":`Bearer ${token}`,
+        },
+        method : "POST",
+        body: formData,
+    }
+
+    return await fetch(`${baseUrl}profilepicture`, params)
+        .then(response=>response.json())
+        .then(data=>{
+            console.log(data)
+            fetchProfil()
+        })
+
+}
+
+function modifyBtn(){
+    const modifyButton = document.querySelectorAll('.modify')
+    modifyButton.forEach((button) => {
+        button.addEventListener('click', () => {
+            const idProduit = button.id
+            modifyForm(idProduit)
+        })
+    })
+
+}
+
+function modifyForm(idProduit){
+    let addImageTemplate = `
+ 
+              <div class="mb-3">
+                <label  class="form-label">Nom</label>
+                <input class="form-control" type="text" id="modifyName">
+                <label  class="form-label">Description</label>
+                <input class="form-control" type="text" id="modifyDescription">
+                <label  class="form-label">Status</label>
+                <input placeholder="acheté ou en attente" class="form-control" type="text" id="modifyStatus">
+              </div>
+              <button type="submit" class="btn btn-primary submitModify">Submit</button>
+
+    `
+
+    renderContent(addImageTemplate)
+
+
+
+
+
+    const submitModify = document.querySelector('.submitModify')
+    submitModify.addEventListener('click', ()=>{
+        const modifyNameInput = document.querySelector('#modifyName').value
+        const modifyDescriptionInput = document.querySelector('#modifyDescription').value
+        const modifyStatusInput = document.querySelector('#modifyStatus').value
+
+        let statut = null
+
+        if (modifyStatusInput== "acheté"){
+            statut = true
+        }else if(modifyStatusInput== "en attente"){
+            statut = false
+        }
+
+        fetchModify(idProduit, modifyNameInput, modifyDescriptionInput, statut)
+    })
+}//renvoie le formulaire pour modifier un produit
+
+async function fetchModify(idProduit, modifyNameInput, modifyDescriptionInput, statut){
+    let content = {
+        name : modifyNameInput,
+        description: modifyDescriptionInput,
+        status : statut,
+    }
+
+
+    const params = {
+        headers : {"Content-type":"application/json",
+            "Authorization":`Bearer ${token}`},
+        method : "PUT",
+        body: JSON.stringify(content),
+    }
+
+    return await fetch(`${baseUrl}mylist/edit/${idProduit}`, params)
+        .then(response=>response.json())
+        .then(data=>{
+            console.log(data)
             run()
         })
 
